@@ -1,0 +1,7 @@
+{
+  "name": "AI Subtitle Generator",
+  "description": "Upload an audio file to automatically generate subtitles in SRT format using the power of Gemini AI.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
