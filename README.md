@@ -1,239 +1,183 @@
-# AI Subtitle Generator
+<div align="center">
 
-## Overview
+<img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=2,9,18&height=200&section=header&text=AI%20Subtitle%20Generator&fontSize=48&fontColor=ffffff&animation=fadeIn&fontAlignY=35&desc=Speech-to-Text%20%2B%20Multilingual%20Translation%20%7C%20Whisper%20%2B%20Gemini%20AI&descAlignY=58&descSize=15"/>
 
-AI Subtitle Generator is a compact, production-ready tool that converts audio and video files into time-aligned subtitles (SRT/VTT). It supports MP3 and MP4 inputs, accurately transcribes speech, and produces downloadable subtitle files with precise timestamps for seamless integration into video workflows.
+<br/>
 
-Here's the thing: this repository is built for engineers who want a reliable, extensible subtitle pipeline they can deploy locally or in the cloud.
+![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![Whisper](https://img.shields.io/badge/OpenAI_Whisper-412991?style=for-the-badge&logo=openai&logoColor=white)
+![Gemini AI](https://img.shields.io/badge/Gemini_AI-4285F4?style=for-the-badge&logo=google&logoColor=white)
+![FFmpeg](https://img.shields.io/badge/FFmpeg-007808?style=for-the-badge&logo=ffmpeg&logoColor=white)
 
-## Key features
+<br/>
 
-* Accepts MP3 and MP4 files (single file upload or batch processing)
-* High-accuracy speech-to-text transcription
-* Word- and sentence-level timestamp alignment
-* Exports SRT and VTT subtitle formats
-* Language detection and multi-language support
-* Optional speaker diarization (speaker labels)
-* Configurable chunking and silence-based segmentation
-* CLI, REST API, and simple web UI endpoints
-* Docker-friendly and CI/CD ready
+> **Upload any audio or video. Get accurate, timestamped subtitles in multiple languages — instantly.**
+> No manual transcription. No expensive tools. Just AI.
 
-## Use cases
+<br/>
 
-* Content creators adding subtitles to videos
-* Podcasters generating show notes and captions
-* Accessibility improvements for educational or marketing media
-* Searchable archives of recorded meetings and interviews
+[![GitHub stars](https://img.shields.io/github/stars/Hemkumar247/AI-subtitle-Generator?style=social)](https://github.com/Hemkumar247/AI-subtitle-Generator)
 
-## Architecture
-
-1. Ingest: Accepts file uploads (MP3/MP4) via REST or CLI.
-2. Preprocess: Normalizes audio, resamples, and optionally removes noise.
-3. Transcribe: Uses a speech model to generate raw transcripts.
-4. Align: Aligns text to timestamps, performs chunking, and formats SRT/VTT.
-5. Postprocess: Language normalization, punctuation restoration, speaker tags.
-6. Export: Writes SRT or VTT files and returns download links.
-
-## Technology stack (recommended)
-
-* Backend: Python 3.10+ with FastAPI
-* Speech: OpenAI Whisper / Gemini Speech / any compatible STT model
-* Audio: FFmpeg for preprocessing and format handling
-* Data storage: Local filesystem or cloud storage (S3/GCS)
-* Optional UI: React or Bolt.new for lightweight front-end
-* Containerization: Docker
-
-## Installation (local)
-
-Assumes Python 3.10+ and FFmpeg installed.
-
-```bash
-git clone <repo-url>
-cd ai-subtitle-generator
-python -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-```
-
-Create a `.env` file with the following keys:
-
-```env
-# Example environment variables
-STT_PROVIDER=whisper
-OPENAI_API_KEY=sk-...           # if using OpenAI/Gemini
-STORAGE_PATH=./outputs
-MAX_CHUNK_SEC=30                # chunk length used for long files
-DIARIZATION=false
-LANGUAGE=auto
-```
-
-## Quickstart (CLI)
-
-1. Transcribe a file and generate an SRT:
-
-```bash
-python cli.py transcribe --input path/to/video.mp4 --output ./outputs --format srt
-```
-
-2. Batch process a folder:
-
-```bash
-python cli.py batch --input-folder ./uploads --output-folder ./outputs --format vtt
-```
-
-## Quickstart (API)
-
-Start the FastAPI server:
-
-```bash
-uvicorn app.main:app --host 0.0.0.0 --port 8000
-```
-
-Endpoints
-
-* `POST /transcribe` — single file upload (multipart/form-data), returns JSON with download URL and metadata.
-* `POST /batch` — accept a list of file URLs to process asynchronously
-* `GET /health` — health check
-
-Example `POST /transcribe` request (curl):
-
-```bash
-curl -X POST "http://localhost:8000/transcribe" -F "file=@./samples/sample.mp4" -F "format=srt"
-```
-
-Response structure
-
-```json
-{
-  "status": "success",
-  "transcript": "Full transcribed text...",
-  "subtitle_file": "/downloads/sample.srt",
-  "duration_seconds": 102.4,
-  "language": "en",
-  "segments": [
-    {"start": 0.0, "end": 4.2, "text": "Hello and welcome."},
-    {"start": 4.3, "end": 9.1, "text": "This is a demo."}
-  ]
-}
-```
-
-## Subtitle formatting details
-
-### SRT example
-
-```
-1
-00:00:00,000 --> 00:00:04,200
-Hello and welcome.
-
-2
-00:00:04,300 --> 00:00:09,100
-This is a demo.
-```
-
-### VTT example
-
-```
-WEBVTT
-
-00:00:00.000 --> 00:00:04.200
-Hello and welcome.
-
-00:00:04.300 --> 00:00:09.100
-This is a demo.
-```
-
-## Alignment and timestamps
-
-* Use silence detection and fixed-length chunking to avoid time drift for long files.
-* For sub-word timing or very precise alignment, enable frame-level alignment when supported by the STT model.
-* Handle overlapping speech by allowing short overlap windows and optional speaker diarization.
-
-## Model and accuracy considerations
-
-* Prefer robust, large speech models for higher accuracy; smaller models reduce cost but degrade accuracy.
-* Enable punctuation restoration using a lightweight punctuation model for readability.
-* Provide a configurable confidence threshold to flag low-confidence segments for human review.
-
-## Performance and scaling
-
-* Use worker queue (Redis + RQ / Celery) for parallel processing of multiple files.
-* Store intermediate audio chunks and transcriptions in cloud storage for horizontal scaling.
-* Use batching and model warm-up to reduce per-file latency.
-
-## Privacy and security
-
-* Process files in a private VPC or on-premise if required.
-* Encrypt files at rest using provider storage encryption.
-* Implement TTL for stored media and automatic deletion policy.
-* If using third-party STT APIs, disclose this in privacy policy and provide an opt-out for local-only processing.
-
-## Testing
-
-* Include unit tests for preprocessing, timestamp alignment, and subtitle generation.
-* Add end-to-end tests with representative MP3/MP4 samples.
-* Validate SRT/VTT output against a strict schema (timestamps monotonic, no overlapping segments).
-
-## Deployment (Docker)
-
-`Dockerfile` (example):
-
-```dockerfile
-FROM python:3.10-slim
-WORKDIR /app
-COPY requirements.txt ./
-RUN pip install -r requirements.txt
-COPY . /app
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
-```
-
-`docker-compose.yml` (example):
-
-```yaml
-version: '3.8'
-services:
-  web:
-    build: .
-    ports:
-      - "8000:8000"
-    environment:
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - STORAGE_PATH=/data/outputs
-    volumes:
-      - ./outputs:/data/outputs
-```
-
-## CLI reference
-
-* `transcribe` — Transcribe a single file.
-* `batch` — Process multiple files in a folder.
-* `status` — Check job status by job id.
-* `download` — Fetch generated subtitle file by id.
-
-## Common troubleshooting
-
-* Audio not transcribing: check FFmpeg installation and input codec support.
-* Time drift across segments: increase chunk size and enable silence-based segmentation.
-* Low accuracy: switch to a larger STT model or enable model-specific language hints.
-
-## Limitations
-
-* Accuracy depends on audio quality and model size.
-* Speaker diarization may fail for heavily overlapping speech.
-* Very short clips (<0.5s) may be skipped by the chunker.
-
-## Contributing
-
-Contributions welcome. Please follow the standard GitHub flow:
-
-1. Open an issue describing the feature or bug.
-2. Create a branch: `feature/your-feature`.
-3. Add tests and document changes.
-4. Open a pull request.
-
-## License
-
-This project is licensed under the MIT License
-
+</div>
 
 ---
+
+## 💡 The Origin Story
+
+> *I was watching a Korean movie late one night — and I couldn't find English subtitles anywhere.*
+
+That moment made me realize how often language is the only barrier between a person and a story they'd love. Subtitles exist to bridge that gap — but creating them is slow, expensive, and inaccessible for most creators and enthusiasts.
+
+So I built **AI Subtitle Generator** — an AI-powered tool that generates accurate, timestamped subtitles from any audio or video file, automatically, in multiple languages.
+
+This is a problem I personally faced. The solution is one I'd actually use.
+
+---
+
+## ✨ Features
+
+```
+🎙️ Record Audio Live        →  Record directly in the browser — no file needed
+📁 Upload MP3 / MP4         →  Supports both audio and video file input
+⏱️ Timestamp Alignment      →  Subtitles precisely synced with the source audio
+🌐 Native Language Output   →  Subtitles in the original spoken language
+🇬🇧 English Translation     →  Parallel English subtitles via Gemini AI
+🌍 Multi-Language Support   →  Regional + international languages supported
+🎤 Speaker Detection        →  Identifies and labels different speakers
+📄 SRT / VTT Export         →  Ready-to-use subtitle file formats
+📋 Copy to Clipboard        →  One-click copy for quick use
+⬇️ Download Output          →  Download translated text directly
+```
+
+---
+
+## 🎬 How It Works
+
+```
+User records live OR uploads MP3 / MP4 file
+                ↓
+      FFmpeg preprocesses the audio
+      (extraction + format conversion)
+                ↓
+      OpenAI Whisper transcribes speech
+      → raw text with precise timestamps
+      → automatic punctuation
+                ↓
+      Gemini AI handles:
+      → Translation to English
+      → Native language subtitle formatting
+      → Speaker label identification
+                ↓
+      Subtitles rendered in frontend
+      with timestamp alignment
+                ↓
+      Export as SRT / VTT
+      OR copy directly to clipboard
+```
+
+---
+
+## 🛠️ Tech Stack
+
+| Layer | Technology | Role |
+|---|---|---|
+| **Speech-to-Text** | OpenAI Whisper | Transcribes audio with timestamps |
+| **Translation & NLP** | Google Gemini AI | Translates + formats subtitles |
+| **Audio Processing** | FFmpeg | Format handling + audio extraction |
+| **Frontend** | HTML / CSS / JavaScript | Direct browser interface |
+| **Backend** | Python | Orchestrates the full pipeline |
+
+---
+
+## 🌐 Supported Languages
+
+Whisper + Gemini together handle a wide range of languages including:
+
+`English` `Tamil` `Hindi` `Korean` `Telugu` `Malayalam` `Kannada` `Bengali` `French` `Spanish` `German` `Japanese` `Arabic` and many more.
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Python 3.8+
+- FFmpeg installed on your system
+- Google Gemini API key
+
+### Setup
+
+```bash
+# 1. Clone the repo
+git clone https://github.com/Hemkumar247/AI-subtitle-Generator.git
+cd AI-subtitle-Generator
+
+# 2. Install Python dependencies
+pip install -r requirements.txt
+
+# 3. Install FFmpeg
+# macOS:
+brew install ffmpeg
+# Ubuntu/Debian:
+sudo apt install ffmpeg
+# Windows: download from https://ffmpeg.org/download.html
+
+# 4. Add your Gemini API key
+echo "GEMINI_API_KEY=your_api_key_here" > .env
+
+# 5. Run the app
+python app.py
+```
+
+Open the app in your browser and generate your first subtitles 🎬
+
+---
+
+## 🎯 Who Is This For
+
+| User | Use Case |
+|---|---|
+| 🎬 Movie enthusiasts | Generate subtitles for foreign films with no existing subs |
+| 🎓 Educators | Auto-subtitle lectures and educational content |
+| 🎙️ Content creators | Add subtitles to videos without manual effort |
+| 🌍 Language learners | Read native + English subtitles side by side |
+| 🏢 Professionals | Transcribe meetings, interviews, and presentations |
+
+---
+
+## 🔮 Coming Soon
+
+- [ ] Live deployment (Vercel / Render)
+- [ ] YouTube URL direct input
+- [ ] Subtitle overlay on video preview
+- [ ] Batch processing for multiple files
+- [ ] Downloadable `.srt` and `.vtt` with embedded timestamps
+- [ ] Dark/light UI theme toggle
+
+---
+
+## 🤝 Contributing
+
+Pull requests and ideas are welcome.
+Open an [issue](https://github.com/Hemkumar247/AI-subtitle-Generator/issues) to report bugs or suggest features.
+
+---
+
+## 🧑‍💻 Built by
+
+**Hem Kumar** — AI + Full-Stack Developer, Chennai 🇮🇳
+
+*Started from a late-night Korean movie. Built into a tool for the world.*
+
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-hemkumarvitta-0A66C2?style=flat-square&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/hemkumarvitta)
+[![GitHub](https://img.shields.io/badge/GitHub-Hemkumar247-181717?style=flat-square&logo=github&logoColor=white)](https://github.com/Hemkumar247)
+[![Gmail](https://img.shields.io/badge/Email-hemkumarvitta%40gmail.com-D14836?style=flat-square&logo=gmail&logoColor=white)](mailto:hemkumarvitta@gmail.com)
+
+---
+
+<div align="center">
+
+⭐ **If this helped you enjoy content across language barriers — drop a star.**
+
+<img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=2,9,18&height=100&section=footer"/>
+
+</div>
